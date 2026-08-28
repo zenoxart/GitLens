@@ -13,6 +13,8 @@
                 <MenuItem text="Open Repository..." onAction="#onOpenRepository"/>
                 <MenuItem text="Clone Repository..." onAction="#onCloneRepository"/>
                 <SeparatorMenuItem/>
+                <MenuItem text="Settings..." onAction="#onSettings"/>
+                <SeparatorMenuItem/>
                 <MenuItem text="Exit" onAction="#onExit"/>
             </Menu>
             <Menu text="Repository">

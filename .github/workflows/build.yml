@@ -15,10 +15,16 @@ jobs:
         include:
           - os: windows-latest
             artifact: windows
+            platform: win
+            icon: src/main/resources/icons/gitlens.ico
           - os: macos-latest
             artifact: macos
+            platform: mac
+            icon: src/main/resources/icons/gitlens.icns
           - os: ubuntu-latest
             artifact: linux
+            platform: linux
+            icon: src/main/resources/icons/gitlens-256.png
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
@@ -39,9 +45,69 @@ jobs:
         run: ./mvnw -B -Pdist package
         shell: bash
 
+      - name: Package native app image (jpackage)
+        run: |
+          mkdir -p jpackage-input
+          cp target/gitlens-${{ matrix.platform }}.jar jpackage-input/
+          jpackage \
+            --type app-image \
+            --input jpackage-input \
+            --main-jar gitlens-${{ matrix.platform }}.jar \
+            --main-class com.codehistorian.Launcher \
+            --name GitLens \
+            --app-version 1.0.0 \
+            --vendor GitLens \
+            --icon ${{ matrix.icon }} \
+            --dest dist-app
+        shell: bash
+
+      - name: Zip native app image
+        run: |
+          cd dist-app
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            powershell -NoProfile -Command "Compress-Archive -Path 'GitLens' -DestinationPath '../gitlens-${{ matrix.artifact }}.zip'"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            zip -r -y "../gitlens-${{ matrix.artifact }}.zip" "GitLens.app"
+          else
+            zip -r "../gitlens-${{ matrix.artifact }}.zip" "GitLens"
+          fi
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: gitlens-${{ matrix.artifact }}
-          path: target/gitlens-*.jar
+          path: gitlens-${{ matrix.artifact }}.zip
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download all platform app images
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten into one folder
+        run: |
+          mkdir -p dist
+          find artifacts -name '*.zip' -exec cp {} dist/ \;
+          ls -la dist
+
+      - name: Publish rolling "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+          gh release create latest dist/*.zip \
+            --title "Latest build" \
+            --notes "Automatically built from $(git rev-parse --short HEAD) on main. Self-contained native app for your platform — no separate Java install needed. Unzip and run the GitLens app inside." \
+            --latest

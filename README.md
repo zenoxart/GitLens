@@ -11,6 +11,13 @@
 ![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-9b6bf2)
 
+### ⬇ Downloads
+
+[**Windows**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-windows.zip) · [**macOS**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-macos.zip) · [**Linux**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-linux.zip)
+
+*Native, self-contained apps — no separate Java install needed — rebuilt from `main` on every push.*
+*Unzip, then run `GitLens.exe` (Windows) · open `GitLens.app` (macOS) · run `GitLens/bin/GitLens` (Linux). Unsigned builds — Windows/macOS may warn about an unrecognized publisher on first launch.*
+
 </div>
 
 <br />
@@ -50,6 +57,7 @@ No server, no database. Your Git repository *is* the database. A hidden `.code-h
 | ✅ | Full-text search (Apache Lucene) across commit messages and file paths |
 | ✅ | AI assistant panel — evidence-backed answers with clickable citations |
 | ✅ | Modern dark UI, purple accent, native window icon |
+| ✅ | Settings screen for the API key, persisted to your OS's app-data folder |
 | 🧩 | GitHub pull request / issue fetching — implemented, not yet wired into the UI |
 | 🧩 | Java symbol extraction (JavaParser) — implemented, not yet wired into the UI |
 | 🗺️ | Dependency graph view, developer-expertise scoring, method-level history |
@@ -73,18 +81,6 @@ No server, no database. Your Git repository *is* the database. A hidden `.code-h
 
 The Java application always retrieves evidence itself before ever calling the LLM — the model explains, it never searches on its own.
 
-## Download
-
-Every push to `main` builds a runnable jar for Windows, macOS, and Linux via [GitHub Actions](https://github.com/zenoxart/GitLens/actions/workflows/build.yml):
-
-1. Open the [**Actions**](https://github.com/zenoxart/GitLens/actions/workflows/build.yml) tab and pick the latest successful run.
-2. Download the artifact for your platform (`gitlens-windows`, `gitlens-macos`, or `gitlens-linux`) — it's a zip containing one jar.
-3. Run it with a JDK 21+ on your `PATH`:
-
-```bash
-java -jar gitlens-win.jar
-```
-
 ## Getting started (build from source)
 
 **Prerequisites:** JDK 21+. That's it — the Maven wrapper (`mvnw` / `mvnw.cmd`) downloads everything else, including the right JavaFX platform jars for your OS.
@@ -102,22 +98,37 @@ Run it directly:
 
 On Windows use `mvnw.cmd javafx:run` instead.
 
-Or build a standalone runnable jar (the same one CI produces):
+Or build a standalone runnable jar:
 
 ```bash
 ./mvnw -Pdist package
 java -jar target/gitlens-*.jar
 ```
 
+Or package it into the same kind of native app image CI publishes (needs a JDK 21 with `jpackage`, bundled with the JDK itself):
+
+```bash
+./mvnw -Pdist package
+mkdir jpackage-input && cp target/gitlens-*.jar jpackage-input/
+jpackage --type app-image --input jpackage-input --main-jar $(basename target/gitlens-*.jar) \
+  --main-class com.codehistorian.Launcher --name GitLens
+```
+
 Then in the app: **File → Open Repository** and point it at any local Git repository.
 
 ## Configuration
 
-| Variable | Purpose |
-|---|---|
-| `ANTHROPIC_API_KEY` | Enables the AI Assistant panel. Without it, GitLens still retrieves and displays evidence, but answers come back as "AI answers are not configured" instead of an LLM-generated explanation. |
+Open **File → Settings...** and paste in your Anthropic API key to enable the AI Assistant panel. It's saved to a per-user settings file and reused on every launch:
 
-GitHub enrichment (pull requests, issues) is implemented in `github/` and `service/GitHubService.java` but not yet wired to a settings screen — see [Features](#features).
+| OS | Location |
+|---|---|
+| Windows | `%APPDATA%\GitLens\settings.json` |
+| macOS | `~/Library/Application Support/GitLens/settings.json` |
+| Linux | `$XDG_CONFIG_HOME/GitLens/settings.json` (falls back to `~/.config/GitLens/settings.json`) |
+
+The key is stored in plain text, scoped to your user account — don't share this file. Setting the `ANTHROPIC_API_KEY` environment variable also works and is used as a fallback when nothing is saved. Without either, GitLens still retrieves and displays evidence, but answers come back as "AI answers are not configured" instead of an LLM-generated explanation.
+
+GitHub enrichment (pull requests, issues) is implemented in `github/` and `service/GitHubService.java` but doesn't have a settings field of its own yet — see [Features](#features).
 
 ## Project structure
 
@@ -125,20 +136,22 @@ GitHub enrichment (pull requests, issues) is implemented in `github/` and `servi
 src/main/java/com/codehistorian/
     Main.java, Launcher.java     entry points (Launcher exists so the shaded jar can run without --module-path)
     ui/          MainController.java — wires the FXML view to the services below
+                 SettingsDialog.java — the API key input screen
     service/     RepositoryService, GitHistoryService, GitHubService, SearchService,
-                 QuestionService, EvidenceService, CodeAnalysisService
-    model/       plain data classes (CommitInfo, PullRequestInfo, IssueInfo, Evidence, ...)
+                 QuestionService, EvidenceService, CodeAnalysisService, SettingsService
+    model/       plain data classes (CommitInfo, PullRequestInfo, IssueInfo, Evidence, AppSettings, ...)
     git/         JGit integration — reading repos, commits, diffs, blame
     github/      GitHub REST client — pull request & issue fetchers
     search/      Apache Lucene index, indexer, search engine
     analysis/    JavaParser-based symbol & dependency extraction
     ai/          LLM client, prompt builder, answer generator
-    storage/     JSON cache + the .code-history/ project folder layout
+    storage/     JSON cache, the .code-history/ project folder layout, and AppDataLocator
+                 (resolves the per-OS settings folder for the saved API key)
 
 src/main/resources/
     fxml/main.fxml     the UI layout
     css/modern.css      dark theme, purple primary color
-    icons/              app icon (multiple sizes + .ico)
+    icons/              app icon (multiple sizes + .ico + .icns)
 ```
 
 ## Local storage
