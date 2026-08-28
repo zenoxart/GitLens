@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.codehistorian.ui.MainController"
+            prefWidth="1280" prefHeight="800">
+    <top>
+        <MenuBar>
+            <Menu text="File">
+                <MenuItem text="Open Repository..." onAction="#onOpenRepository"/>
+                <MenuItem text="Clone Repository..." onAction="#onCloneRepository"/>
+                <SeparatorMenuItem/>
+                <MenuItem text="Exit" onAction="#onExit"/>
+            </Menu>
+            <Menu text="Repository">
+                <MenuItem text="Refresh" onAction="#onRefreshRepository"/>
+            </Menu>
+            <Menu text="Analyze">
+                <MenuItem text="Build Search Index" onAction="#onBuildIndex"/>
+            </Menu>
+            <Menu text="Help">
+                <MenuItem text="About" onAction="#onAbout"/>
+            </Menu>
+        </MenuBar>
+    </top>
+    <center>
+        <SplitPane dividerPositions="0.22">
+            <SplitPane orientation="VERTICAL" dividerPositions="0.55">
+                <VBox spacing="6" styleClass="side-panel">
+                    <padding>
+                        <Insets top="8" right="8" bottom="8" left="8"/>
+                    </padding>
+                    <Label text="REPOSITORY EXPLORER" styleClass="section-header"/>
+                    <TreeView fx:id="repoTreeView" VBox.vgrow="ALWAYS"/>
+                </VBox>
+                <VBox spacing="6" styleClass="side-panel">
+                    <padding>
+                        <Insets top="8" right="8" bottom="8" left="8"/>
+                    </padding>
+                    <Label text="COMMITS" styleClass="section-header"/>
+                    <ListView fx:id="commitListView" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </SplitPane>
+            <SplitPane orientation="VERTICAL" dividerPositions="0.6">
+                <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE">
+                    <Tab text="Code">
+                        <TextArea fx:id="codeTextArea" editable="false" style="-fx-font-family: 'Consolas', 'Monospaced';"/>
+                    </Tab>
+                    <Tab text="Diff">
+                        <TextArea fx:id="diffTextArea" editable="false" style="-fx-font-family: 'Consolas', 'Monospaced';"/>
+                    </Tab>
+                    <Tab text="Search">
+                        <VBox spacing="6">
+                            <padding>
+                                <Insets top="8" right="8" bottom="8" left="8"/>
+                            </padding>
+                            <HBox spacing="6">
+                                <TextField fx:id="searchField" promptText="Search repository history..." HBox.hgrow="ALWAYS"/>
+                                <Button text="Search" onAction="#onSearch" styleClass="accent"/>
+                            </HBox>
+                            <ListView fx:id="searchResultsListView" VBox.vgrow="ALWAYS"/>
+                        </VBox>
+                    </Tab>
+                </TabPane>
+                <VBox spacing="6" styleClass="ai-panel">
+                    <padding>
+                        <Insets top="8" right="8" bottom="8" left="8"/>
+                    </padding>
+                    <Label text="GITLENS AI ASSISTANT" styleClass="section-header"/>
+                    <HBox spacing="6">
+                        <TextField fx:id="questionField" promptText="Ask a question about this codebase..." HBox.hgrow="ALWAYS"/>
+                        <Button text="Ask" onAction="#onAsk" styleClass="accent"/>
+                    </HBox>
+                    <TextArea fx:id="answerTextArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS"/>
+                    <Label text="EVIDENCE" styleClass="section-header"/>
+                    <ListView fx:id="evidenceListView" prefHeight="120"/>
+                </VBox>
+            </SplitPane>
+        </SplitPane>
+    </center>
+    <bottom>
+        <Label fx:id="statusLabel" text="No repository open">
+            <padding>
+                <Insets top="4" right="8" bottom="4" left="8"/>
+            </padding>
+        </Label>
+    </bottom>
+</BorderPane>
