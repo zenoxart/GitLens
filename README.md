@@ -11,6 +11,12 @@
 ![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![JavaFX](https://img.shields.io/badge/JavaFX-21-9b6bf2)
 
+### ⬇ Downloads
+
+[**Windows**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-win.jar) · [**macOS**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-mac.jar) · [**Linux**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-linux.jar)
+
+*Runnable jars, rebuilt from `main` on every push. Requires JDK 21+ — run with `java -jar <file>.jar`.*
+
 </div>
 
 <br />
@@ -72,18 +78,6 @@ No server, no database. Your Git repository *is* the database. A hidden `.code-h
 ```
 
 The Java application always retrieves evidence itself before ever calling the LLM — the model explains, it never searches on its own.
-
-## Download
-
-Every push to `main` builds a runnable jar for Windows, macOS, and Linux via [GitHub Actions](https://github.com/zenoxart/GitLens/actions/workflows/build.yml):
-
-1. Open the [**Actions**](https://github.com/zenoxart/GitLens/actions/workflows/build.yml) tab and pick the latest successful run.
-2. Download the artifact for your platform (`gitlens-windows`, `gitlens-macos`, or `gitlens-linux`) — it's a zip containing one jar.
-3. Run it with a JDK 21+ on your `PATH`:
-
-```bash
-java -jar gitlens-win.jar
-```
 
 ## Getting started (build from source)
 

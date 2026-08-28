@@ -45,3 +45,35 @@ jobs:
           name: gitlens-${{ matrix.artifact }}
           path: target/gitlens-*.jar
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download all platform jars
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten jars into one folder
+        run: |
+          mkdir -p dist
+          find artifacts -name '*.jar' -exec cp {} dist/ \;
+          ls -la dist
+
+      - name: Publish rolling "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+          gh release create latest dist/*.jar \
+            --title "Latest build" \
+            --notes "Automatically built from $(git rev-parse --short HEAD) on main. Download the jar for your platform and run: java -jar <file>.jar (JDK 21+ required)." \
+            --latest
