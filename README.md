@@ -57,6 +57,7 @@ No server, no database. Your Git repository *is* the database. A hidden `.code-h
 | ✅ | Full-text search (Apache Lucene) across commit messages and file paths |
 | ✅ | AI assistant panel — evidence-backed answers with clickable citations |
 | ✅ | Modern dark UI, purple accent, native window icon |
+| ✅ | Settings screen for the API key, persisted to your OS's app-data folder |
 | 🧩 | GitHub pull request / issue fetching — implemented, not yet wired into the UI |
 | 🧩 | Java symbol extraction (JavaParser) — implemented, not yet wired into the UI |
 | 🗺️ | Dependency graph view, developer-expertise scoring, method-level history |
@@ -117,11 +118,17 @@ Then in the app: **File → Open Repository** and point it at any local Git repo
 
 ## Configuration
 
-| Variable | Purpose |
-|---|---|
-| `ANTHROPIC_API_KEY` | Enables the AI Assistant panel. Without it, GitLens still retrieves and displays evidence, but answers come back as "AI answers are not configured" instead of an LLM-generated explanation. |
+Open **File → Settings...** and paste in your Anthropic API key to enable the AI Assistant panel. It's saved to a per-user settings file and reused on every launch:
 
-GitHub enrichment (pull requests, issues) is implemented in `github/` and `service/GitHubService.java` but not yet wired to a settings screen — see [Features](#features).
+| OS | Location |
+|---|---|
+| Windows | `%APPDATA%\GitLens\settings.json` |
+| macOS | `~/Library/Application Support/GitLens/settings.json` |
+| Linux | `$XDG_CONFIG_HOME/GitLens/settings.json` (falls back to `~/.config/GitLens/settings.json`) |
+
+The key is stored in plain text, scoped to your user account — don't share this file. Setting the `ANTHROPIC_API_KEY` environment variable also works and is used as a fallback when nothing is saved. Without either, GitLens still retrieves and displays evidence, but answers come back as "AI answers are not configured" instead of an LLM-generated explanation.
+
+GitHub enrichment (pull requests, issues) is implemented in `github/` and `service/GitHubService.java` but doesn't have a settings field of its own yet — see [Features](#features).
 
 ## Project structure
 
@@ -129,20 +136,22 @@ GitHub enrichment (pull requests, issues) is implemented in `github/` and `servi
 src/main/java/com/codehistorian/
     Main.java, Launcher.java     entry points (Launcher exists so the shaded jar can run without --module-path)
     ui/          MainController.java — wires the FXML view to the services below
+                 SettingsDialog.java — the API key input screen
     service/     RepositoryService, GitHistoryService, GitHubService, SearchService,
-                 QuestionService, EvidenceService, CodeAnalysisService
-    model/       plain data classes (CommitInfo, PullRequestInfo, IssueInfo, Evidence, ...)
+                 QuestionService, EvidenceService, CodeAnalysisService, SettingsService
+    model/       plain data classes (CommitInfo, PullRequestInfo, IssueInfo, Evidence, AppSettings, ...)
     git/         JGit integration — reading repos, commits, diffs, blame
     github/      GitHub REST client — pull request & issue fetchers
     search/      Apache Lucene index, indexer, search engine
     analysis/    JavaParser-based symbol & dependency extraction
     ai/          LLM client, prompt builder, answer generator
-    storage/     JSON cache + the .code-history/ project folder layout
+    storage/     JSON cache, the .code-history/ project folder layout, and AppDataLocator
+                 (resolves the per-OS settings folder for the saved API key)
 
 src/main/resources/
     fxml/main.fxml     the UI layout
     css/modern.css      dark theme, purple primary color
-    icons/              app icon (multiple sizes + .ico)
+    icons/              app icon (multiple sizes + .ico + .icns)
 ```
 
 ## Local storage

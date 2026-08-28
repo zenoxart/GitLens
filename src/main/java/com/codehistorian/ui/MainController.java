@@ -13,6 +13,7 @@ import com.codehistorian.service.GitHistoryService;
 import com.codehistorian.service.QuestionService;
 import com.codehistorian.service.RepositoryService;
 import com.codehistorian.service.SearchService;
+import com.codehistorian.service.SettingsService;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -56,6 +57,7 @@ public class MainController {
     private final GitHistoryService gitHistoryService = new GitHistoryService();
     private final SearchService searchService = new SearchService();
     private final EvidenceService evidenceService = new EvidenceService();
+    private final SettingsService settingsService = new SettingsService();
     private QuestionService questionService;
 
     @FXML
@@ -113,8 +115,18 @@ public class MainController {
             }
         });
 
-        LlmClient llmClient = new AnthropicLlmClient(System.getenv("ANTHROPIC_API_KEY"));
+        rebuildQuestionService();
+    }
+
+    private void rebuildQuestionService() {
+        LlmClient llmClient = new AnthropicLlmClient(settingsService.resolveAnthropicApiKey());
         questionService = new QuestionService(searchService, evidenceService, new AnswerGenerator(llmClient));
+    }
+
+    @FXML
+    private void onSettings() {
+        new SettingsDialog(settingsService).showAndSave(getStage());
+        rebuildQuestionService();
     }
 
     @FXML
