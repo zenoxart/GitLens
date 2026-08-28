@@ -13,9 +13,10 @@
 
 ### ⬇ Downloads
 
-[**Windows**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-win.jar) · [**macOS**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-mac.jar) · [**Linux**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-linux.jar)
+[**Windows**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-windows.zip) · [**macOS**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-macos.zip) · [**Linux**](https://github.com/zenoxart/GitLens/releases/latest/download/gitlens-linux.zip)
 
-*Runnable jars, rebuilt from `main` on every push. Requires JDK 21+ — run with `java -jar <file>.jar`.*
+*Native, self-contained apps — no separate Java install needed — rebuilt from `main` on every push.*
+*Unzip, then run `GitLens.exe` (Windows) · open `GitLens.app` (macOS) · run `GitLens/bin/GitLens` (Linux). Unsigned builds — Windows/macOS may warn about an unrecognized publisher on first launch.*
 
 </div>
 
@@ -96,11 +97,20 @@ Run it directly:
 
 On Windows use `mvnw.cmd javafx:run` instead.
 
-Or build a standalone runnable jar (the same one CI produces):
+Or build a standalone runnable jar:
 
 ```bash
 ./mvnw -Pdist package
 java -jar target/gitlens-*.jar
+```
+
+Or package it into the same kind of native app image CI publishes (needs a JDK 21 with `jpackage`, bundled with the JDK itself):
+
+```bash
+./mvnw -Pdist package
+mkdir jpackage-input && cp target/gitlens-*.jar jpackage-input/
+jpackage --type app-image --input jpackage-input --main-jar $(basename target/gitlens-*.jar) \
+  --main-class com.codehistorian.Launcher --name GitLens
 ```
 
 Then in the app: **File → Open Repository** and point it at any local Git repository.
