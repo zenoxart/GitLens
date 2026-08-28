@@ -32,15 +32,12 @@
                 <javafx.platform>win</javafx.platform>
             </properties>
         </profile>
-        <profile>
-            <id>mac</id>
-            <activation>
-                <os><family>mac</family></os>
-            </activation>
-            <properties>
-                <javafx.platform>mac</javafx.platform>
-            </properties>
-        </profile>
+        <!--
+          Plexus's <os><family>unix</family></os> check also matches real macOS (it's
+          POSIX-compatible), so this and the mac profile below both activate at once on
+          a Mac. Maven applies later-declared profiles' properties last when they
+          collide, so unix must come first here for mac's javafx.platform to win.
+        -->
         <profile>
             <id>unix</id>
             <activation>
@@ -48,6 +45,15 @@
             </activation>
             <properties>
                 <javafx.platform>linux</javafx.platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <properties>
+                <javafx.platform>mac</javafx.platform>
             </properties>
         </profile>
         <profile>
